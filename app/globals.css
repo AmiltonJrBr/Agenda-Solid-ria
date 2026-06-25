@@ -1,0 +1,87 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: var(--font-sans), system-ui, sans-serif;
+  --font-atkinson: var(--font-atkinson), system-ui, sans-serif;
+
+  /* Custom Spacing - Fixing collapsed layouts & overlaps */
+  --spacing-gutter: 1.5rem;
+  --spacing-xs: 0.5rem;     /* 8px */
+  --spacing-sm: 1rem;       /* 16px */
+  --spacing-md: 1.5rem;     /* 24px */
+  --spacing-lg: 2.25rem;    /* 36px */
+  --spacing-xl: 3.5rem;     /* 56px */
+
+  /* Custom Typography Sizes - Fixing tiny text overlapping */
+  --font-size-headline-lg: 1.875rem; /* 30px */
+  --font-size-headline-md: 1.35rem;  /* 21.6px */
+  --font-size-headline-xl: 2.5rem;   /* 40px */
+  --font-size-body-lg: 1.125rem;     /* 18px */
+  --font-size-body-md: 1rem;         /* 16px */
+  --font-size-body-sm: 0.875rem;     /* 14px */
+  --font-size-label-sm: 0.75rem;     /* 12px */
+
+  /* Color Palette - Removing quotes and normalizing names */
+  --color-surface: #f8f9ff;
+  --color-surface-dim: #cbdbf5;
+  --color-surface-bright: #f8f9ff;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #eff4ff;
+  --color-surface-container: #e5eeff;
+  --color-surface-container-high: #dce9ff;
+  --color-surface-container-highest: #d3e4fe;
+  
+  --color-on-surface: #0b1c30;
+  --color-on-surface-variant: #434655;
+  --color-inverse-surface: #213145;
+  --color-inverse-on-surface: #eaf1ff;
+  --color-outline: #737686;
+  --color-outline-variant: #c3c6d7;
+  --color-surface-tint: #0053db;
+  
+  --color-primary: #004ac6;
+  --color-on-primary: #ffffff;
+  --color-primary-container: #2563eb;
+  --color-on-primary-container: #eeefff;
+  --color-inverse-primary: #b4c5ff;
+  
+  --color-secondary: #006c49;
+  --color-on-secondary: #ffffff;
+  --color-secondary-container: #6cf8bb;
+  --color-on-secondary-container: #00714d;
+  
+  --color-tertiary: #8e3c00;
+  --color-on-tertiary: #ffffff;
+  --color-tertiary-container: #b54e00;
+  --color-on-tertiary-container: #ffece5;
+  
+  --color-error: #ba1a1a;
+  --color-on-error: #ffffff;
+  --color-error-container: #ffdad6;
+  --color-on-error-container: #93000a;
+  
+  --color-primary-fixed: #dbe1ff;
+  --color-primary-fixed-dim: #b4c5ff;
+  --color-on-primary-fixed: #00174b;
+  --color-on-primary-fixed-variant: #003ea8;
+  
+  --color-secondary-fixed: #6ffbbe;
+  --color-secondary-fixed-dim: #4edea3;
+  --color-on-secondary-fixed: #002113;
+  --color-on-secondary-fixed-variant: #005236;
+  
+  --color-tertiary-fixed: #ffdbca;
+  --color-tertiary-fixed-dim: #ffb690;
+  --color-on-tertiary-fixed: #341100;
+  --color-on-tertiary-fixed-variant: #783200;
+  
+  --color-background: #f8f9ff;
+  --color-on-background: #0b1c30;
+  --color-surface-variant: #d3e4fe;
+
+  --shadow-card-shadow: 0 4px 20px -2px rgba(11, 28, 48, 0.05), 0 2px 8px -1px rgba(11, 28, 48, 0.03);
+}
+
+@utility card-shadow {
+  box-shadow: 0 4px 20px -2px rgba(11, 28, 48, 0.05),  0 2px 8px -1px rgba(11, 28, 48, 0.03);
+}
