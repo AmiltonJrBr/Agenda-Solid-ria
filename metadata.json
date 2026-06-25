@@ -1,0 +1,6 @@
+{
+  "name": "Agenda Solidaria",
+  "description": "Plataforma de Gestão de Impacto e Portal do Voluntário para conectar cidadãos a causas sociais.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
