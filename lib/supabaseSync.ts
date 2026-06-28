@@ -23,6 +23,7 @@ export interface EventItem {
   filled: number;
   total: number;
   image: string;
+  admins?: string;
 }
 
 export interface Talent {
@@ -366,6 +367,7 @@ CREATE TABLE IF NOT EXISTS events (
   filled INTEGER DEFAULT 0,
   total INTEGER DEFAULT 0,
   image TEXT,
+  admins TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
 );
 

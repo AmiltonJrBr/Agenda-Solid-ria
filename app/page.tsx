@@ -42,7 +42,8 @@ import {
   Lock,
   User,
   Eye,
-  EyeOff
+  EyeOff,
+  ShieldCheck
 } from 'lucide-react';
 import Image from 'next/image';
 import {
@@ -60,7 +61,8 @@ import {
   saveApplication,
   removeApplication,
   saveSettings,
-  SQL_MIGRATION_SCRIPT
+  SQL_MIGRATION_SCRIPT,
+  EventItem
 } from '../lib/supabaseSync';
 import { getSupabaseClient } from '../lib/supabase';
 
@@ -114,7 +116,8 @@ const INITIAL_EVENTS = [
     progress: 85,
     filled: 34,
     total: 40,
-    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAaIguAj6u9PW3CYsbbeqkoet87LI7trbl0ujjT2Jj2cCXFpXLxoDTrHLhi6Q--ir08txnQtcjGqzY2USjawvu-LBvgD14wqoObKdXcFnHp-JpQOu-9e-1SA1JzQmwxr2wErFrhjerK7jHSVBEDO31HaU83wmRjyCgoQwK9OtZHsReJ5s3crG7wIEq2-U0N0I-wmfGxHw1pD7FLgoUUsdrVJPkQLdDCosu9R39JybCtNyeXjG51Rojd2AztjADFrCpBGvK56PJh3Ec'
+    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAaIguAj6u9PW3CYsbbeqkoet87LI7trbl0ujjT2Jj2cCXFpXLxoDTrHLhi6Q--ir08txnQtcjGqzY2USjawvu-LBvgD14wqoObKdXcFnHp-JpQOu-9e-1SA1JzQmwxr2wErFrhjerK7jHSVBEDO31HaU83wmRjyCgoQwK9OtZHsReJ5s3crG7wIEq2-U0N0I-wmfGxHw1pD7FLgoUUsdrVJPkQLdDCosu9R39JybCtNyeXjG51Rojd2AztjADFrCpBGvK56PJh3Ec',
+    admins: 'admin@ong.org'
   },
   {
     id: 2,
@@ -126,7 +129,8 @@ const INITIAL_EVENTS = [
     progress: 100,
     filled: 60,
     total: 60,
-    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuB6_Yrb8qa_ii2DryaddxrJPEvSD1IUmpDwbd69NtHFS5_GCMqhMQHxh5RbQv_d01uh9p7Dafjy5UkeV_A7feUz6YWVJbsg_FN3WjHCVjdH_n_e2nBjZvOrtDy0GbDMwmNXmPBAMRiybSVFrP-Fn6z-BUxIytq0heXElbbfNy4kkeum_etjnNGbNZPIMJzDlNH4v8vkNqGAyjcpcow0w7833kgrTSc2VkZOO9Fu_IffGY_wmDuqna1IrkZG4A6EmY_0aFOlZsyYHOQ'
+    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuB6_Yrb8qa_ii2DryaddxrJPEvSD1IUmpDwbd69NtHFS5_GCMqhMQHxh5RbQv_d01uh9p7Dafjy5UkeV_A7feUz6YWVJbsg_FN3WjHCVjdH_n_e2nBjZvOrtDy0GbDMwmNXmPBAMRiybSVFrP-Fn6z-BUxIytq0heXElbbfNy4kkeum_etjnNGbNZPIMJzDlNH4v8vkNqGAyjcpcow0w7833kgrTSc2VkZOO9Fu_IffGY_wmDuqna1IrkZG4A6EmY_0aFOlZsyYHOQ',
+    admins: 'admin@ong.org'
   },
   {
     id: 3,
@@ -138,7 +142,8 @@ const INITIAL_EVENTS = [
     progress: 42,
     filled: 5,
     total: 12,
-    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuALoZt4bzys-kpc1E2vGbhOXlqfP_WPMxf4P_mNNT_7rJ_EfkODzqG6cIeVNb6howgkW6xwvEogKU78P29C-5bCqg82oZpj3QyY6-4JGsspDvguS011jznOnH1QpZslac5IVIQUOEYKUDOveadt9rfPXjHpQtGdoWD8eFQS5jIpQJ7hNIu43v8rNNLXZe7Wwe3idAIuRDnkcjY0TISkGgj4wzPgcpOrkffFCJYlgVok-vXrJ6JxDE7PjmLVVXD8OHElt4_H79MFSko'
+    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuALoZt4bzys-kpc1E2vGbhOXlqfP_WPMxf4P_mNNT_7rJ_EfkODzqG6cIeVNb6howgkW6xwvEogKU78P29C-5bCqg82oZpj3QyY6-4JGsspDvguS011jznOnH1QpZslac5IVIQUOEYKUDOveadt9rfPXjHpQtGdoWD8eFQS5jIpQJ7hNIu43v8rNNLXZe7Wwe3idAIuRDnkcjY0TISkGgj4wzPgcpOrkffFCJYlgVok-vXrJ6JxDE7PjmLVVXD8OHElt4_H79MFSko',
+    admins: 'admin@ong.org'
   }
 ];
 
@@ -196,6 +201,8 @@ function generateUniqueId(): number {
 
 export default function Page() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [currentUserEmail, setCurrentUserEmail] = useState<string | null>(null);
+  const [isRegisterMode, setIsRegisterMode] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
 
   useEffect(() => {
@@ -204,12 +211,23 @@ export default function Page() {
         const loggedIn = localStorage.getItem('vol_admin_logged_in') === 'true';
         if (loggedIn) {
           setIsLoggedIn(true);
+          const email = localStorage.getItem('vol_admin_email') || 'admin@ong.org';
+          setCurrentUserEmail(email);
         }
       }
       setIsHydrated(true);
     }, 0);
     return () => clearTimeout(timer);
   }, []);
+
+  const hasEventPermission = (eventAdmins?: string) => {
+    if (!isLoggedIn) return false;
+    const email = currentUserEmail || 'admin@ong.org';
+    if (email === 'admin@ong.org') return true; // Local bypass has full rights
+    if (!eventAdmins) return true; // Allow by default if no admins are set
+    const adminList = eventAdmins.split(',').map(item => item.trim().toLowerCase());
+    return adminList.includes(email.toLowerCase());
+  };
 
   const [loginUser, setLoginUser] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
@@ -224,10 +242,54 @@ export default function Page() {
 
     const username = loginUser.trim();
 
+    // Registration Mode logic
+    if (isRegisterMode) {
+      const supabase = getSupabaseClient() as any;
+      if (!supabase) {
+        setLoginError('Supabase não configurado. Não é possível se registrar.');
+        showToastMsg('Erro de configuração!', 'error');
+        setIsSubmitting(false);
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase.auth.signUp({
+          email: username,
+          password: loginPassword,
+        });
+
+        if (error) {
+          setLoginError(`Erro no cadastro: ${error.message}`);
+          showToastMsg('Erro no cadastro!', 'error');
+        } else if (data?.user) {
+          showToastMsg('Cadastro realizado com sucesso!', 'success');
+          // Automatically log them in if session is immediately available
+          setIsLoggedIn(true);
+          localStorage.setItem('vol_admin_logged_in', 'true');
+          localStorage.setItem('vol_admin_email', data.user.email || username);
+          setCurrentUserEmail(data.user.email || username);
+          setLoginPassword('');
+          setLoginUser('');
+          setIsRegisterMode(false);
+        } else {
+          setLoginError('Não foi possível concluir o cadastro.');
+          showToastMsg('Erro no cadastro!', 'error');
+        }
+      } catch (err: any) {
+        console.error('Sign up exception:', err);
+        setLoginError(`Erro inesperado: ${err.message || err}`);
+        showToastMsg('Erro de conexão!', 'error');
+      }
+      setIsSubmitting(false);
+      return;
+    }
+
     // 1. Try local admin bypass
     if (username.toLowerCase() === 'admin' && loginPassword === 'admin') {
       setIsLoggedIn(true);
       localStorage.setItem('vol_admin_logged_in', 'true');
+      localStorage.setItem('vol_admin_email', 'admin@ong.org');
+      setCurrentUserEmail('admin@ong.org');
       showToastMsg('Login efetuado com sucesso (Administrador Local)!', 'success');
       setLoginPassword('');
       setLoginUser('');
@@ -251,6 +313,7 @@ export default function Page() {
           setIsLoggedIn(true);
           localStorage.setItem('vol_admin_logged_in', 'true');
           localStorage.setItem('vol_admin_email', data.user.email || '');
+          setCurrentUserEmail(data.user.email || '');
           showToastMsg(`Bem-vindo, ${data.user.email || 'Usuário'}!`, 'success');
           setLoginPassword('');
           setLoginUser('');
@@ -272,7 +335,9 @@ export default function Page() {
 
   const handleLogout = () => {
     setIsLoggedIn(false);
+    setCurrentUserEmail(null);
     localStorage.removeItem('vol_admin_logged_in');
+    localStorage.removeItem('vol_admin_email');
     showToastMsg('Sessão encerrada com sucesso.', 'info');
   };
 
@@ -306,7 +371,7 @@ export default function Page() {
 
   // Simulated Interactive States
   const [opportunities, setOpportunities] = useState(INITIAL_OPPORTUNITIES);
-  const [events, setEvents] = useState(INITIAL_EVENTS);
+  const [events, setEvents] = useState<EventItem[]>(INITIAL_EVENTS);
   const [talents, setTalents] = useState(INITIAL_TALENTS);
   
   // Dynamic stats
@@ -431,7 +496,8 @@ export default function Page() {
     category: 'Educação',
     date: '',
     location: '',
-    total: 20
+    total: 20,
+    admins: ''
   });
 
   // New Talent Form State
@@ -482,6 +548,10 @@ export default function Page() {
       return;
     }
 
+    const creatorEmail = currentUserEmail || 'admin@ong.org';
+    const otherAdmins = newEventForm.admins ? newEventForm.admins.split(',').map(item => item.trim()).filter(Boolean).join(', ') : '';
+    const finalAdminsList = otherAdmins ? `${creatorEmail}, ${otherAdmins}` : creatorEmail;
+
     const createdEvent = {
       id: generateUniqueId(),
       title: newEventForm.title,
@@ -492,6 +562,7 @@ export default function Page() {
       progress: 0,
       filled: 0,
       total: Number(newEventForm.total),
+      admins: finalAdminsList,
       image: newEventForm.category === 'Educação' 
         ? 'https://lh3.googleusercontent.com/aida-public/AB6AXuAaIguAj6u9PW3CYsbbeqkoet87LI7trbl0ujjT2Jj2cCXFpXLxoDTrHLhi6Q--ir08txnQtcjGqzY2USjawvu-LBvgD14wqoObKdXcFnHp-JpQOu-9e-1SA1JzQmwxr2wErFrhjerK7jHSVBEDO31HaU83wmRjyCgoQwK9OtZHsReJ5s3crG7wIEq2-U0N0I-wmfGxHw1pD7FLgoUUsdrVJPkQLdDCosu9R39JybCtNyeXjG51Rojd2AztjADFrCpBGvK56PJh3Ec'
         : newEventForm.category === 'Meio Ambiente'
@@ -506,7 +577,8 @@ export default function Page() {
       category: 'Educação',
       date: '',
       location: '',
-      total: 20
+      total: 20,
+      admins: ''
     });
     setShowNewEventModal(false);
     showToastMsg('Novo mutirão cadastrado com sucesso!', 'success');
@@ -573,6 +645,11 @@ export default function Page() {
 
   const confirmDeleteEvent = () => {
     if (eventToDelete) {
+      if (!hasEventPermission(eventToDelete.admins)) {
+        showToastMsg('Erro: Você não tem permissão para excluir este evento.', 'error');
+        setEventToDelete(null);
+        return;
+      }
       setEvents(prev => prev.filter(ev => ev.id !== eventToDelete.id));
       removeEvent(eventToDelete.id);
       showToastMsg(`Mutirão "${eventToDelete.title}" excluído com sucesso!`, 'success');
@@ -658,7 +735,9 @@ export default function Page() {
                 <Heart className="w-8 h-8 fill-current" />
               </div>
               <h2 className="font-atkinson text-3xl font-bold text-primary leading-tight">{settingsForm.ongName}</h2>
-              <p className="text-xs font-semibold text-outline uppercase tracking-wider mt-1">Plataforma de Gestão de Impacto</p>
+              <p className="text-xs font-semibold text-outline uppercase tracking-wider mt-1">
+                {isRegisterMode ? 'Cadastro de Novo Usuário' : 'Plataforma de Gestão de Impacto'}
+              </p>
             </div>
 
             {/* Error Banner */}
@@ -676,22 +755,22 @@ export default function Page() {
               )}
             </AnimatePresence>
 
-            {/* Login Form */}
+            {/* Login / Register Form */}
             <form onSubmit={handleLoginSubmit} className="space-y-5">
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-outline mb-1.5">Usuário ou E-mail</label>
+                <label className="block text-xs font-bold uppercase tracking-wider text-outline mb-1.5">E-mail</label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-outline">
                     <User className="w-4 h-4" />
                   </div>
                   <input 
-                    type="text" 
+                    type="email" 
                     value={loginUser}
                     onChange={(e) => {
                       setLoginUser(e.target.value);
                       if (loginError) setLoginError('');
                     }}
-                    placeholder="Digite seu usuário ou e-mail"
+                    placeholder="exemplo@email.com"
                     className="w-full pl-10 pr-4 py-2.5 border border-outline-variant rounded-xl focus:border-primary focus:ring-1 focus:ring-primary text-sm text-[#0b1c30] placeholder-[#737686]/60 bg-[#FAF9F6]/50 focus:bg-white transition-all outline-none" 
                     required
                     disabled={isSubmitting}
@@ -752,12 +831,45 @@ export default function Page() {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                     </svg>
-                    <span>Autenticando...</span>
+                    <span>{isRegisterMode ? 'Cadastrando...' : 'Autenticando...'}</span>
                   </>
                 ) : (
-                  <span>Entrar no Sistema</span>
+                  <span>{isRegisterMode ? 'Criar Conta e Entrar' : 'Entrar no Sistema'}</span>
                 )}
               </button>
+
+              {/* Mode Switcher */}
+              <div className="text-center mt-6 text-xs font-semibold text-outline">
+                {isRegisterMode ? (
+                  <p>
+                    Já tem uma conta?{' '}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsRegisterMode(false);
+                        setLoginError('');
+                      }}
+                      className="text-primary hover:underline font-bold cursor-pointer"
+                    >
+                      Entre aqui
+                    </button>
+                  </p>
+                ) : (
+                  <p>
+                    Não tem uma conta?{' '}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsRegisterMode(true);
+                        setLoginError('');
+                      }}
+                      className="text-primary hover:underline font-bold cursor-pointer"
+                    >
+                      Registre-se
+                    </button>
+                  </p>
+                )}
+              </div>
             </form>
           </motion.div>
         </div>
@@ -1258,18 +1370,36 @@ export default function Page() {
                               <div className="flex gap-1 shrink-0">
                                 <button 
                                   onClick={() => {
+                                    if (!hasEventPermission(ev.admins)) {
+                                      showToastMsg('Erro: Apenas os administradores deste evento podem editá-lo.', 'error');
+                                      return;
+                                    }
                                     setEditingEvent(ev);
                                     setShowEditEventModal(true);
                                   }}
-                                  className="p-1 text-primary hover:bg-primary/10 rounded-lg transition-colors"
-                                  title="Editar Evento"
+                                  className={`p-1 rounded-lg transition-colors ${
+                                    hasEventPermission(ev.admins) 
+                                      ? 'text-primary hover:bg-primary/10' 
+                                      : 'text-[#737686]/40 cursor-not-allowed'
+                                  }`}
+                                  title={hasEventPermission(ev.admins) ? "Editar Evento" : "Apenas Administradores"}
                                 >
                                   <Edit className="w-4 h-4" />
                                 </button>
                                 <button 
-                                  onClick={() => handleDeleteEvent(ev.id)}
-                                  className="p-1 text-error hover:bg-error/10 rounded-lg transition-colors"
-                                  title="Excluir Evento"
+                                  onClick={() => {
+                                    if (!hasEventPermission(ev.admins)) {
+                                      showToastMsg('Erro: Apenas os administradores deste evento podem excluí-lo.', 'error');
+                                      return;
+                                    }
+                                    handleDeleteEvent(ev.id);
+                                  }}
+                                  className={`p-1 rounded-lg transition-colors ${
+                                    hasEventPermission(ev.admins) 
+                                      ? 'text-error hover:bg-error/10' 
+                                      : 'text-[#737686]/40 cursor-not-allowed'
+                                  }`}
+                                  title={hasEventPermission(ev.admins) ? "Excluir Evento" : "Apenas Administradores"}
                                 >
                                   <Trash2 className="w-4 h-4" />
                                 </button>
@@ -1283,6 +1413,10 @@ export default function Page() {
                               <p className="text-xs text-outline flex items-center gap-xs">
                                 <MapPin className="w-4 h-4 text-outline" />
                                 <span className="line-clamp-1">{ev.location}</span>
+                              </p>
+                              <p className="text-xs text-outline flex items-center gap-xs">
+                                <ShieldCheck className="w-4 h-4 text-[#137333]/75 shrink-0" />
+                                <span className="line-clamp-1 text-[#137333]/90 font-medium">Admins: {ev.admins || 'admin@ong.org'}</span>
                               </p>
                             </div>
                           </div>
@@ -1680,6 +1814,17 @@ export default function Page() {
                   required
                 />
               </div>
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-outline mb-1">Administradores Auxiliares (E-mails separados por vírgula)</label>
+                <input 
+                  type="text" 
+                  value={newEventForm.admins}
+                  onChange={(e) => setNewEventForm({ ...newEventForm, admins: e.target.value })}
+                  placeholder="Ex: aux1@ong.org, aux2@ong.org"
+                  className="w-full px-4 py-2 border border-outline-variant rounded-lg focus:border-primary text-sm text-[#0b1c30] placeholder-[#737686]/60 bg-white" 
+                />
+                <p className="text-[11px] text-outline mt-1 font-medium">O criador do evento ({currentUserEmail || 'admin@ong.org'}) é adicionado automaticamente como o administrador principal.</p>
+              </div>
               <button 
                 type="submit" 
                 className="w-full py-2.5 bg-primary text-on-primary font-bold text-sm rounded-xl hover:opacity-90 active:scale-95 transition-all shadow-md mt-2 cursor-pointer"
@@ -1766,6 +1911,17 @@ export default function Page() {
                   className="w-full px-4 py-2 border border-outline-variant rounded-lg focus:border-primary text-sm text-[#0b1c30] placeholder-[#737686]/60 bg-white" 
                   required
                 />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-outline mb-1">Administradores (E-mails separados por vírgula)</label>
+                <input 
+                  type="text" 
+                  value={editingEvent.admins || ''}
+                  onChange={(e) => setEditingEvent({ ...editingEvent, admins: e.target.value })}
+                  placeholder="Ex: admin@ong.org, aux@ong.org"
+                  className="w-full px-4 py-2 border border-outline-variant rounded-lg focus:border-primary text-sm text-[#0b1c30] placeholder-[#737686]/60 bg-white" 
+                />
+                <p className="text-[11px] text-outline mt-1 font-medium">Apenas os usuários listados aqui terão permissão para modificar ou excluir este evento.</p>
               </div>
               <button 
                 type="submit" 
